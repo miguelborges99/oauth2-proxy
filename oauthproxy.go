@@ -563,10 +563,38 @@ func isAllowedPath(req *http.Request, route allowedRoute) bool {
 	return matches
 }
 
+// isAllowedRdPath is used to check if auth should be skipped for this request where rd query parameter
+// matches an allowed route
+func isAllowedRdPath(req *http.Request, route allowedRoute) bool {
+	authStart := oauthStartPath
+	if strings.HasSuffix(req.URL.Path, authStart) && strings.HasPrefix(req.URL.RawQuery, "rd=") {
+		queryParams, queryErr := url.ParseQuery(req.URL.RawQuery)
+		if queryErr != nil {
+			return false
+		}
+
+		rdPath := queryParams.Get("rd")
+		u, err := url.Parse(rdPath)
+		if err != nil {
+			return false
+		}
+
+		matches := route.pathRegex.MatchString(u.Path)
+
+		if route.negate {
+			return !matches
+		}
+
+		return matches
+	}
+
+	return false
+}
+
 // IsAllowedRoute is used to check if the request method & path is allowed without auth
 func (p *OAuthProxy) isAllowedRoute(req *http.Request) bool {
 	for _, route := range p.allowedRoutes {
-		if isAllowedMethod(req, route) && isAllowedPath(req, route) {
+		if isAllowedMethod(req, route) && (isAllowedPath(req, route) || isAllowedRdPath(req, route)) {
 			return true
 		}
 	}

@@ -2612,6 +2612,24 @@ func TestAllowedRequest(t *testing.T) {
 			url:     "/skip/auth/routes/wrong/path",
 			allowed: false,
 		},
+		{
+			name:    "Route rd allowed",
+			method:  "GET",
+			url:     "https://app.example.com/auth/start?rd=https://app.example.com/skip/auth/routes/get",
+			allowed: true,
+		},
+		{
+			name:    "Route rd denied with wrong path",
+			method:  "GET",
+			url:     "https://app.example.com/auth/start?rd=https://app.example.com/skip/auth/routes",
+			allowed: false,
+		},
+		{
+			name:    "Route rd denied with wrong path",
+			method:  "GET",
+			url:     "https://app.example.com/auth/start?rd=https://app.example.com/routes/wrong/path",
+			allowed: false,
+		},
 	}
 
 	for _, tc := range testCases {
